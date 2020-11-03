@@ -1,69 +1,64 @@
 # queen_bee.py    17Sep2020  crs, Author
 """
 Establish a centralized "queen bee" process to facilitate
-communications betwee separate clients
+communications between
+    1. queen bee and clients
+The queen keeps a set of clients and for each client:
+    1. send address
+    2. name
 """
 import socket
 ###from numpy import block
 
 from select_trace import SlTrace
-
+from queen_bee_server import QueenBeeServer
 from drone_bee_data import DroneBeeData
 
 class QueenBee:
-    family = socket.AF_INET
-    type = socket.SOCK_DGRAM
-    host = socket.gethostname()
-    port = 12345
     sock = None             # Socket for listening, setup on first get_drone
     """Centralized controling server
     """
-    def __init__(self, family=socket.AF_INET, type=socket.SOCK_DGRAM,
-            host=None, bind_addr=None, port=None):
+    def __init__(self, family=socket.AF_INET, stype=socket.SOCK_DGRAM,
+            port=None):
         """ Setup queen_bee as server
         :family: socket family default: AF_INET
         :type: socket type default: UDP
-        :host: default: this computer
-        :bind_addr: binding address default: 0.0.0.0
         :port: default: QueenBee.port
         """
         self.family = family
-        self.type = type
-        if host is None:
-            host = QueenBee.host
-        self.host = host
-        if port is None:
-            port = QueenBee.port
+        self.stype = stype
         self.port = port
-        if bind_addr is None:
-            bind_addr = "0.0.0.0"
-        self.bind_addr = bind_addr
- 
+        self.bind_addr = "localhost"
+        self.drones = {}    # drones (DroneBeeData) by address
+        self.server = QueenBeeServer(family=self.family,
+                                      stype=self.stype,
+                                      port=self.port)
     def get_family(self):
         return self.family
     
     def get_type(self):
         return self.type
     
-    def get_host(self):
-        return self.host
-    
     def get_port(self):
         return self.port
-    
-    
-    def get_drone(self, wait=None, length=1024):
-        """ Get next drone communication
-        :wait: ammount of seconds to wait/block 
-            default: block
-        :length: max number of bytes to read buffer
-                default: 1024
-        """
-        if self.sock is None:
-            SlTrace.lg(f"QueenBee host:{self.host} port:{self.port}")
-            self.sock = socket.socket(self.family, self.type)
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.sock.bind((self.bind_addr,self.port))
 
-        data,addr = self.sock.recvfrom(1024)            #receive data from client
-        return DroneBeeData(self, data, addr)
+    def get_drones(self, pending_input=True, ):
+        """ Get active drones
+        :pending_input: True - just with pending input
+                    default: True
+        :returns: list of DroneBeeData
+        """
+        pass
+    
+    def send_msg(self, msg, drones=None):
+        """ Send message to zero or more drones
+        :msg: message to send, if not bytes convert to bytes
+        :drones: DroneBeeData or list of
+                None - send to all drones
+        """
+        if drones is None:
+            drones = self.drones.keys()
+        if drones is not list:
+            drones = [drones]   # list of one
+        for drone in drones:
+            self.send_msg_to(msg, drone)

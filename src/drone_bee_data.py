@@ -18,12 +18,9 @@ class DroneBeeData:
         
         
     def get_data(self):
-        """ Get data as string
+        """ Get most recent data as string
         """
-        data = self.data
-        if type(data) == bytes:
-            data = data.decode("utf-8")
-        return data
+        return self.data
     
     def get_id(self):
         return self.address
@@ -34,14 +31,12 @@ class DroneBeeData:
         
         return False
     
-    def replyto(self, reply):
-        """ Send Reply text to drone
-        :reply: reply text
+    def sendto(self, data):
+        """ Send data to drone
+        :data: data to send to drone
         """
-        if type(reply) != bytes:
-            data = bytes(reply, "utf-8")
-        else:
-            data = reply
+        if type(data) != bytes:
+            data = bytes(data, "utf-8")
         self.queen_bee.sock.sendto(data, self.address)
     
     

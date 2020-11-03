@@ -11,7 +11,7 @@ import socket
 import sys
 
 host = "localhost"
-port = 12345             # com port
+port = 12345---             # com port
 sock_timeout = 5
 print(sys.argv)
 pgm = sys.argv[0]
